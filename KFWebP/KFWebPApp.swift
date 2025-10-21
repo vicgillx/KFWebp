@@ -51,7 +51,9 @@ struct KFWebPApp: App {
         KingfisherManager.shared.defaultOptions += [
             .requestModifier(modifier),
             .processor(WebPProcessor.default),
-            .cacheSerializer(WebPSerializer.default)
+            .cacheSerializer(WebPSerializer.default),
+            // 预加载所有动画帧数据，避免后台恢复时出现像素化问题
+            .preloadAllAnimationData
         ]
     }
 }

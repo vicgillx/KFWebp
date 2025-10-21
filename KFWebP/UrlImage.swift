@@ -51,6 +51,16 @@ struct UrlImage: View {
         
     @State private var loading = false
     
+    
+    /// 监听 app 生命周期，用于在从后台恢复时刷新动画图片
+    @Environment(\.scenePhase) private var scenePhase
+
+    /// 强制刷新的触发器，用于在 app 从后台恢复时重新加载动画
+    @State private var refreshTrigger = UUID()
+
+    /// 记录上一次的 scenePhase，用于判断是否从后台恢复
+    @State private var previousScenePhase: ScenePhase?
+    
     private var isAnimatedImage: Bool {
         guard useAnimationImage else { return false }
         guard let url = url else { return false }
@@ -64,6 +74,10 @@ struct UrlImage: View {
             KFAnimatedImage(url)
                 .setProcessor(WebPProcessor.default)
                 .serialize(by: WebPSerializer.default)
+                // 配置选项：预加载所有动画帧数据，避免后台恢复时出现像素化
+                .configure { view in
+                    view.framePreloadCount = .max // 预加载所有帧
+                }
                 .placeholder { _ in
                     placehodler
                 }
@@ -75,6 +89,8 @@ struct UrlImage: View {
                     loading = false
                 }
                 .cancelOnDisappear(cancelOnDisappear)
+                // 使用 refreshTrigger 作为 id，当从后台恢复时强制重新加载
+                .id(refreshTrigger)
         }else {
             KFImage(url)
                 .placeholder { _ in
@@ -98,6 +114,18 @@ struct UrlImage: View {
                 .aspectRatio(contentMode: contentMode)
                 .frame(width: proxy.size.width,height: proxy.size.height)
                 .cornerRadius(0)
+        }
+        .onChange(of: scenePhase) { newPhase in
+            // 当 app 从后台恢复到前台时，刷新动画图片
+            // 只有当从 background 切换到 active 时才刷新，避免不必要的重新加载
+            if isAnimatedImage &&
+               previousScenePhase == .background &&
+               newPhase == .active {
+                // 更新 refreshTrigger 会触发 KFAnimatedImage 的 id 变化，从而强制重新加载
+                refreshTrigger = UUID()
+            }
+            // 更新上一次的 scenePhase
+            previousScenePhase = newPhase
         }
     }
     
