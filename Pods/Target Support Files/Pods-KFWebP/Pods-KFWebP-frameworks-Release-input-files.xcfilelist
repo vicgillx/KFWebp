@@ -1,0 +1,4 @@
+${PODS_ROOT}/Target Support Files/Pods-KFWebP/Pods-KFWebP-frameworks.sh
+${BUILT_PRODUCTS_DIR}/Kingfisher/Kingfisher.framework
+${BUILT_PRODUCTS_DIR}/KingfisherWebP/KingfisherWebP.framework
+${BUILT_PRODUCTS_DIR}/libwebp/libwebp.framework
